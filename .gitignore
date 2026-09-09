@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.env
+
+# Node
+node_modules/
+frontend/dist/
+
+# Models
+*.h5
+*.tflite
+*.pkl
+*.joblib
+*.onnx
+*.pth
+*.pt
+
+# Training data
+backend/app/ml/data/
+
+# Storage
+storage/*
+!storage/.gitkeep
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite3

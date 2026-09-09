@@ -1,0 +1,102 @@
+{
+  "model_version": "disease_pth_v3_20260907",
+  "model_type": "MobileNetV2",
+  "architecture": "MobileNetV2 + Dropout(0.3) + Linear(1280, num_classes)",
+  "framework": "PyTorch",
+  "num_classes": 10,
+  "classes": [
+    "Tomato___Bacterial_spot",
+    "Tomato___Early_blight",
+    "Tomato___Late_blight",
+    "Tomato___Leaf_Mold",
+    "Tomato___Septoria_leaf_spot",
+    "Tomato___Spider_mites Two-spotted_spider_mite",
+    "Tomato___Target_Spot",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+    "Tomato___Tomato_mosaic_virus",
+    "Tomato___healthy"
+  ],
+  "img_size": 224,
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "test_accuracy": 93.0,
+  "best_val_accuracy": 93.94,
+  "macro_avg": {
+    "precision": 0.9384,
+    "recall": 0.9389,
+    "f1": 0.9332
+  },
+  "per_class_metrics": {
+    "Tomato___Bacterial_spot": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "Tomato___Early_blight": {
+      "precision": 1.0,
+      "recall": 0.8333,
+      "f1": 0.9091
+    },
+    "Tomato___Late_blight": {
+      "precision": 0.8125,
+      "recall": 0.9286,
+      "f1": 0.8667
+    },
+    "Tomato___Leaf_Mold": {
+      "precision": 0.8571,
+      "recall": 1.0,
+      "f1": 0.9231
+    },
+    "Tomato___Septoria_leaf_spot": {
+      "precision": 1.0,
+      "recall": 0.9091,
+      "f1": 0.9524
+    },
+    "Tomato___Spider_mites Two-spotted_spider_mite": {
+      "precision": 0.7143,
+      "recall": 1.0,
+      "f1": 0.8333
+    },
+    "Tomato___Target_Spot": {
+      "precision": 1.0,
+      "recall": 0.8182,
+      "f1": 0.9
+    },
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1": 0.9474
+    },
+    "Tomato___Tomato_mosaic_virus": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "Tomato___healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "train_samples": 462,
+  "val_samples": 99,
+  "test_samples": 100,
+  "total_samples": 661,
+  "epochs": 15,
+  "seed": 42,
+  "dataset": "PlantVillage (tomato subset)",
+  "dataset_source": "https://github.com/spMohanty/PlantVillage-Dataset",
+  "dataset_license": "CC0 (Public Domain)",
+  "training_date": "2026-09-07",
+  "class_ordering": "canonical (not filesystem)"
+}

@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Nunito', 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, #fefdf8 0%, #f0fdf4 50%, #f0f9ff 100%);
+  min-height: 100vh;
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary-600 text-white px-6 py-3 rounded-2xl font-semibold 
+           hover:bg-primary-700 transition-all duration-200 
+           shadow-soft hover:shadow-card
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-cream-100 text-primary-700 px-6 py-3 rounded-2xl font-semibold 
+           border-2 border-primary-200
+           hover:bg-primary-50 hover:border-primary-300 transition-all duration-200
+           active:scale-[0.98];
+  }
+  
+  .btn-outline {
+    @apply bg-transparent text-charcoal-700 px-6 py-3 rounded-2xl font-semibold 
+           border-2 border-charcoal-200
+           hover:bg-charcoal-50 hover:border-charcoal-300 transition-all duration-200
+           active:scale-[0.98];
+  }
+  
+  .btn-danger {
+    @apply bg-danger text-white px-6 py-3 rounded-2xl font-semibold 
+           hover:bg-danger-dark transition-all duration-200
+           active:scale-[0.98];
+  }
+  
+  .btn-success {
+    @apply bg-success text-white px-6 py-3 rounded-2xl font-semibold 
+           hover:bg-success-dark transition-all duration-200 shadow-soft
+           active:scale-[0.98];
+  }
+  
+  .btn-pill {
+    @apply px-8 py-3 rounded-full font-bold text-lg
+           transition-all duration-200 active:scale-[0.98];
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white/90 backdrop-blur-sm rounded-3xl shadow-card 
+           border border-white/50 p-6
+           transition-all duration-300;
+  }
+  
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:-translate-y-1 cursor-pointer;
+  }
+  
+  .card-glass {
+    @apply bg-white/70 backdrop-blur-md rounded-3xl shadow-soft 
+           border border-white/30 p-6;
+  }
+  
+  .card-highlight {
+    @apply card border-l-4 border-primary-500;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full px-5 py-3.5 border-2 border-charcoal-200 rounded-2xl 
+           focus:outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-400
+           transition-all duration-200 text-charcoal-800
+           placeholder:text-charcoal-400;
+  }
+  
+  .input-field-lg {
+    @apply input-field py-4 text-lg;
+  }
+  
+  .label {
+    @apply block text-sm font-bold text-charcoal-700 mb-2;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-light text-success-dark;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-light text-warning-dark;
+  }
+  
+  .badge-danger {
+    @apply badge bg-danger-light text-danger-dark;
+  }
+  
+  .badge-info {
+    @apply badge bg-sky-100 text-sky-700;
+  }
+
+  /* Page containers */
+  .page-container {
+    @apply max-w-6xl mx-auto space-y-6 pb-24 md:pb-8;
+  }
+  
+  .page-header {
+    @apply mb-6;
+  }
+  
+  .page-title {
+    @apply text-3xl font-extrabold text-charcoal-900;
+  }
+  
+  .page-subtitle {
+    @apply text-charcoal-600 mt-1;
+  }
+
+  /* Metric cards */
+  .metric-card {
+    @apply card text-center;
+  }
+  
+  .metric-value {
+    @apply text-4xl font-extrabold;
+  }
+  
+  .metric-label {
+    @apply text-sm text-charcoal-500 mt-1;
+  }
+
+  /* Agricultural scene backgrounds */
+  .bg-agricultural {
+    @apply bg-gradient-to-br from-cream-50 via-primary-50 to-sky-50;
+  }
+  
+  .bg-farm-scene {
+    background: 
+      linear-gradient(180deg, transparent 0%, rgba(240, 253, 244, 0.8) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2322c55e' fill-opacity='0.1' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,229.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+    background-size: cover;
+  }
+
+  /* Animations */
+  .animate-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-charcoal-100 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-charcoal-300 rounded-full hover:bg-charcoal-400;
+  }
+}
+
+/* Custom utilities for the agricultural theme */
+@layer utilities {
+  .text-gradient-green {
+    @apply bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent;
+  }
+  
+  .bg-agricultural-gradient {
+    @apply bg-gradient-to-br from-cream-50 via-primary-50/50 to-sky-50;
+  }
+  
+  .shadow-agricultural {
+    box-shadow: 0 4px 20px -2px rgba(34, 197, 94, 0.1);
+  }
+}
+
+/* Mobile bottom navigation styles */
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md 
+         border-t border-charcoal-100 z-50
+         md:hidden;
+}
+
+.bottom-nav-item {
+  @apply flex flex-col items-center justify-center py-2 px-1 
+         text-charcoal-500 transition-colors duration-200;
+}
+
+.bottom-nav-item.active {
+  @apply text-primary-600;
+}
+
+/* Loading spinner for agricultural theme */
+.spinner-agricultural {
+  @apply w-12 h-12 border-4 border-primary-200 border-t-primary-600 
+         rounded-full animate-spin;
+}
