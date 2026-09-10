@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useFarm } from '../contexts/FarmContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { diseaseAPI, parseApiError } from '../services/api';
-import { Upload, Camera, AlertTriangle, Bug, Loader2, CheckCircle, Info } from 'lucide-react';
+import { Upload, Camera, AlertTriangle, Bug, Loader2, CheckCircle, Info, Sprout, Search } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
 interface DiseaseResult {
@@ -61,21 +61,24 @@ const CROP_OPTIONS = [
   { value: 'sugarcane', labelEn: 'Sugarcane', labelTe: 'చెరకు', emoji: '🎋' },
 ];
 
+type CropMode = null | 'present' | 'another';
+
 export default function Disease() {
   const { t, language } = useLanguage();
   const { cropCycle, setDiseaseResult } = useFarm();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [cropMode, setCropMode] = useState<CropMode>(null);
   const [modelLoading, setModelLoading] = useState(false);
   const [stages, setStages] = useState<AnalysisStage[]>([]);
   const [result, setResult] = useState<DiseaseResult | null>(null);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState<string | null>(null);
-  const [selectedCrop, setSelectedCrop] = useState<string>(
-    cropCycle?.crop_name?.toLowerCase() || ''
-  );
+  const [selectedCrop, setSelectedCrop] = useState<string>('');
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const activeCropName = cropCycle?.crop_name?.toLowerCase() || '';
 
   useEffect(() => {
     if (modelLoading) {
@@ -90,6 +93,18 @@ export default function Disease() {
 
   const updateStage = (key: string, status: AnalysisStage['status']) => {
     setStages(prev => prev.map(s => s.key === key ? { ...s, status } : s));
+  };
+
+  const handleModeSelect = (mode: 'present' | 'another') => {
+    setCropMode(mode);
+    setResult(null);
+    setError('');
+    setPreview(null);
+    if (mode === 'present' && activeCropName) {
+      setSelectedCrop(activeCropName);
+    } else {
+      setSelectedCrop('');
+    }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +178,14 @@ export default function Disease() {
     }
   };
 
+  const handleReset = () => {
+    setCropMode(null);
+    setSelectedCrop('');
+    setResult(null);
+    setError('');
+    setPreview(null);
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity?.toLowerCase()) {
       case 'severe': return 'badge-danger';
@@ -201,75 +224,228 @@ export default function Disease() {
         </div>
       </div>
 
-      <div className="card">
-        <label className="label">{language === 'te' ? 'మీ పంటను ఎంచుకోండి' : 'Select your crop'}</label>
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-          {CROP_OPTIONS.map(c => (
-            <button
-              key={c.value}
-              onClick={() => {
-                setSelectedCrop(c.value);
-                setResult(null);
-                setError('');
-              }}
-              className={`p-3 rounded-2xl border-2 transition-all duration-200 ${
-                selectedCrop === c.value
-                  ? 'border-primary-500 bg-primary-50 shadow-soft'
-                  : 'border-charcoal-200 hover:border-primary-300'
-              }`}
-            >
-              <span className="text-2xl">{c.emoji}</span>
-              <p className="text-xs font-medium text-charcoal-700 mt-1">{language === 'te' ? c.labelTe : c.labelEn}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* STEP 1: Crop Mode Selection */}
+      {cropMode === null && !result && (
+        <div className="space-y-4 animate-slide-up">
+          <div className="card">
+            <h3 className="font-bold text-charcoal-900 mb-2">
+              {language === 'te' ? 'ఏ పంటను తనిఖీ చేస్తున్నారు?' : 'Whose crop are you checking?'}
+            </h3>
+            <p className="text-sm text-charcoal-500 mb-4">
+              {language === 'te' ? 'మీ ప్రస్తుత పంట లేదా వేరే పంట కోసం ఆరోగ్య తనిఖీ చేయండి' : 'Check health for your current farming crop or a different crop'}
+            </p>
 
-      <div
-        className={`card border-2 border-dashed transition-all duration-200 ${
-          selectedCrop
-            ? 'border-primary-400 hover:border-primary-500 cursor-pointer hover:bg-primary-50'
-            : 'border-charcoal-200 bg-charcoal-50 cursor-not-allowed'
-        }`}
-        onClick={() => selectedCrop && fileInputRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={selectedCrop ? handleDrop : undefined}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-        <div className="text-center py-12">
-          <div className="w-20 h-20 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
-            <Camera className="h-10 w-10 text-primary-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Option 1: My Present Crop */}
+              <button
+                onClick={() => handleModeSelect('present')}
+                disabled={!activeCropName}
+                className={`p-6 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  activeCropName
+                    ? 'border-primary-400 hover:border-primary-500 hover:bg-primary-50 cursor-pointer'
+                    : 'border-charcoal-200 bg-charcoal-50 cursor-not-allowed opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center">
+                    <Sprout className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal-900">
+                      {language === 'te' ? 'నా ప్రస్తుత పంట' : 'My Present Crop'}
+                    </p>
+                    {activeCropName && (
+                      <p className="text-sm text-primary-600 font-medium capitalize">
+                        {activeCropName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {activeCropName ? (
+                  <p className="text-sm text-charcoal-600">
+                    {language === 'te'
+                      ? `${activeCropName} ఆకు చిత్రాన్ని అప్‌లోడ్ చేసి విశ్లేషించండి`
+                      : `Upload a ${activeCropName} leaf image for analysis`}
+                  </p>
+                ) : (
+                  <p className="text-sm text-charcoal-500">
+                    {language === 'te'
+                      ? 'మొదలుగా పంటను ఎంచుకోండి. క్రాప్ సిఫార్సు నుండి మీ పంటను ఎంచుకోండి.'
+                      : 'No active crop found. Please start farming a crop first.'}
+                  </p>
+                )}
+              </button>
+
+              {/* Option 2: Another Crop */}
+              <button
+                onClick={() => handleModeSelect('another')}
+                className="p-6 rounded-2xl border-2 border-charcoal-200 hover:border-primary-300 hover:bg-primary-50 text-left transition-all duration-200 cursor-pointer"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-harvest-100 rounded-2xl flex items-center justify-center">
+                    <Search className="h-6 w-6 text-harvest-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal-900">
+                      {language === 'te' ? 'వేరే పంట' : 'Another Crop'}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-charcoal-600">
+                  {language === 'te'
+                    ? 'వేరే పంట ఆకును తనిఖీ చేయండి. ఇది మీ ప్రస్తుత పంటను మార్చదు.'
+                    : 'Check a different crop. This will NOT change your active crop.'}
+                </p>
+              </button>
+            </div>
           </div>
-          <p className="text-xl font-bold text-charcoal-900 mb-2">
-            {selectedCrop ? (language === 'te' ? 'ఆకును స్కాన్ చేయడానికి నొక్కండి' : 'Tap to Scan Leaf') : (language === 'te' ? 'మొదలుగా పంటను ఎంచుకోండి' : 'Select a crop first')}
-          </p>
-          <p className="text-charcoal-500 mb-4">
-            {selectedCrop
-              ? (language === 'te' ? 'మద్దతు: JPEG, PNG, WEBP (గరిష్టం 10MB)' : 'Supports: JPEG, PNG, WEBP (Max 10MB)')
-              : (language === 'te' ? 'పైన మీ పంటను ఎంచుకోండి, ఆపై ఆకు చిత్రాన్ని అప్‌లోడ్ చేయండి' : 'Choose your crop above, then upload a leaf image')
-            }
-          </p>
+        </div>
+      )}
+
+      {/* STEP 2A: "My Present Crop" - auto-selected, show upload directly */}
+      {cropMode === 'present' && activeCropName && !result && (
+        <div className="space-y-4 animate-slide-up">
+          <div className="card border-l-4 border-primary-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{getCropEmoji(activeCropName)}</span>
+                <div>
+                  <p className="text-sm text-charcoal-500">{language === 'te' ? 'ప్రస్తుత పంట' : 'Present Crop'}</p>
+                  <p className="font-bold text-charcoal-900 capitalize">{activeCropName}</p>
+                </div>
+              </div>
+              <button onClick={handleReset} className="btn-outline text-sm">
+                {language === 'te' ? 'మార్చు' : 'Change'}
+              </button>
+            </div>
+          </div>
+
+          <div
+            className={`card border-2 border-dashed transition-all duration-200 border-primary-400 hover:border-primary-500 cursor-pointer hover:bg-primary-50`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
+                <Camera className="h-10 w-10 text-primary-600" />
+              </div>
+              <p className="text-xl font-bold text-charcoal-900 mb-2">
+                {language === 'te' ? 'ఆకును స్కాన్ చేయడానికి నొక్కండి' : 'Tap to Scan Leaf'}
+              </p>
+              <p className="text-charcoal-500 mb-4">
+                {language === 'te' ? 'మద్దతు: JPEG, PNG, WEBP (గరిష్టం 10MB)' : 'Supports: JPEG, PNG, WEBP (Max 10MB)'}
+              </p>
+              <button className="btn-secondary">
+                <Upload className="h-4 w-4 inline mr-2" />
+                {language === 'te' ? 'గ్యాలరీ నుండి అప్‌లోడ్ చేయండి' : 'Upload from Gallery'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2B: "Another Crop" - show crop selection grid */}
+      {cropMode === 'another' && !result && (
+        <div className="space-y-4 animate-slide-up">
+          <div className="card border-l-4 border-harvest-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Search className="h-6 w-6 text-harvest-600" />
+                <div>
+                  <p className="text-sm text-charcoal-500">{language === 'te' ? 'వేరే పంట' : 'Another Crop'}</p>
+                  <p className="font-bold text-charcoal-900">
+                    {language === 'te' ? 'ఏ పంట ఆకును తనిఖీ చేయాలో ఎంచుకోండి' : 'Select which crop to check'}
+                  </p>
+                </div>
+              </div>
+              <button onClick={handleReset} className="btn-outline text-sm">
+                {language === 'te' ? 'మార్చు' : 'Change'}
+              </button>
+            </div>
+          </div>
+
+          {activeCropName && (
+            <div className="bg-info-50 border border-info-200 rounded-xl p-3 text-sm text-info-800">
+              {language === 'te'
+                ? `ℹ️ మీ ప్రస్తుత పంట ${activeCropName}. వేరే పంట ఎంపిక మీ ప్రస్తుత పంటను మార్చదు.`
+                : `ℹ️ Your active crop is ${activeCropName}. Selecting another crop will NOT change it.`}
+            </div>
+          )}
+
+          <div className="card">
+            <label className="label">{language === 'te' ? 'పంటను ఎంచుకోండి' : 'Select crop to scan'}</label>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+              {CROP_OPTIONS.map(c => (
+                <button
+                  key={c.value}
+                  onClick={() => {
+                    setSelectedCrop(c.value);
+                    setResult(null);
+                    setError('');
+                  }}
+                  className={`p-3 rounded-2xl border-2 transition-all duration-200 ${
+                    selectedCrop === c.value
+                      ? 'border-primary-500 bg-primary-50 shadow-soft'
+                      : 'border-charcoal-200 hover:border-primary-300'
+                  }`}
+                >
+                  <span className="text-2xl">{c.emoji}</span>
+                  <p className="text-xs font-medium text-charcoal-700 mt-1">{language === 'te' ? c.labelTe : c.labelEn}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {selectedCrop && (
-            <button className="btn-secondary">
-              <Upload className="h-4 w-4 inline mr-2" />
-              {language === 'te' ? 'గ్యాలరీ నుండి అప్‌లోడ్ చేయండి' : 'Upload from Gallery'}
-            </button>
+            <div
+              className="card border-2 border-dashed border-primary-400 hover:border-primary-500 cursor-pointer hover:bg-primary-50 transition-all duration-200"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <div className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
+                  <Camera className="h-10 w-10 text-primary-600" />
+                </div>
+                <p className="text-xl font-bold text-charcoal-900 mb-2">
+                  {language === 'te' ? 'ఆకును స్కాన్ చేయడానికి నొక్కండి' : 'Tap to Scan Leaf'}
+                </p>
+                <p className="text-charcoal-500 mb-4">
+                  {language === 'te' ? 'మద్దతు: JPEG, PNG, WEBP (గరిష్టం 10MB)' : 'Supports: JPEG, PNG, WEBP (Max 10MB)'}
+                </p>
+                <button className="btn-secondary">
+                  <Upload className="h-4 w-4 inline mr-2" />
+                  {language === 'te' ? 'గ్యాలరీ నుండి అప్‌లోడ్ చేయండి' : 'Upload from Gallery'}
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      )}
 
+      {/* Image Preview */}
       {preview && (
         <div className="card">
           <img src={preview} alt="Uploaded leaf" className="max-h-64 mx-auto rounded-2xl" />
         </div>
       )}
 
+      {/* Loading State */}
       {modelLoading && (
         <div className="card text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
@@ -314,6 +490,7 @@ export default function Disease() {
         </div>
       )}
 
+      {/* Error State */}
       {error && (
         <div className="card bg-danger-light border-danger/20">
           <p className="text-danger-dark">{error}</p>
@@ -368,7 +545,6 @@ export default function Disease() {
             </div>
           )}
 
-          {/* Treatment for healthy */}
           {result.treatment && (
             <div className="card border-l-4 border-success-400">
               <h3 className="font-bold text-charcoal-900 mb-3">{t('healthGuidance')}</h3>
@@ -400,13 +576,18 @@ export default function Disease() {
               <p className="text-sm text-charcoal-700">{t('disclaimer')}</p>
             </div>
           </div>
+
+          <div className="text-center">
+            <button onClick={handleReset} className="btn-primary">
+              {language === 'te' ? 'మరొక స్కాన్ చేయండి' : 'Scan Another Leaf'}
+            </button>
+          </div>
         </div>
       )}
 
       {/* Diseased Result */}
       {result && result.supported && isDiseased && (
         <div className="space-y-6 animate-slide-up">
-          {/* Main Result Card */}
           <div className="card border-l-4 border-danger bg-danger-light/30">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -445,7 +626,6 @@ export default function Disease() {
             )}
           </div>
 
-          {/* Visual Evidence */}
           {result.visual_evidence && result.visual_evidence.length > 0 && (
             <div className="card">
               <h3 className="font-bold text-charcoal-900 mb-3">{t('visualEvidence')}</h3>
@@ -460,7 +640,6 @@ export default function Disease() {
             </div>
           )}
 
-          {/* Treatment */}
           {result.treatment && (
             <div className="card border-l-4 border-primary-400">
               <h3 className="font-bold text-charcoal-900 mb-3">{t('treatmentGuidance')}</h3>
@@ -522,7 +701,6 @@ export default function Disease() {
             </div>
           )}
 
-          {/* Follow-up recommendation */}
           {result.needs_follow_up && !result.treatment && (
             <div className="card bg-info-50 border-info-200">
               <div className="flex items-start gap-3">
@@ -537,12 +715,17 @@ export default function Disease() {
             </div>
           )}
 
-          {/* Disclaimer */}
           <div className="card bg-cream-100 border-cream-300">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-harvest-600 mt-0.5" />
               <p className="text-sm text-charcoal-700">{t('disclaimer')}</p>
             </div>
+          </div>
+
+          <div className="text-center">
+            <button onClick={handleReset} className="btn-primary">
+              {language === 'te' ? 'మరొక స్కాన్ చేయండి' : 'Scan Another Leaf'}
+            </button>
           </div>
         </div>
       )}
@@ -572,7 +755,6 @@ export default function Disease() {
             </div>
           </div>
 
-          {/* Treatment for unable to determine */}
           {result.treatment && (
             <div className="card border-l-4 border-warning-400">
               <h3 className="font-bold text-charcoal-900 mb-3">{t('imageQualityGuidance')}</h3>
@@ -597,6 +779,12 @@ export default function Disease() {
               )}
             </div>
           )}
+
+          <div className="text-center">
+            <button onClick={handleReset} className="btn-primary">
+              {language === 'te' ? 'మరొక స్కాన్ చేయండి' : 'Scan Another Leaf'}
+            </button>
+          </div>
         </div>
       )}
 
