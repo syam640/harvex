@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -9,28 +10,36 @@ from app.api import ai, locations, crop_recommendations
 
 import app.models.models  # noqa: F401 — ensure all models are registered with Base.metadata
 
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("harvex.startup")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("HARVEX_STARTUP_DB_INIT_BEGIN", flush=True)
+
     table_names = sorted(Base.metadata.tables.keys())
     dialect = engine.url.drivername
     db_host = engine.url.host or "unknown"
     db_name = engine.url.database or "unknown"
-    logger.info(
-        "DB init: dialect=%s host=%s db=%s registered_tables=%d tables=%s",
-        dialect, db_host, db_name, len(table_names), table_names,
-    )
+
+    print(f"DB dialect: {dialect}", flush=True)
+    print(f"DB host: {db_host}", flush=True)
+    print(f"DB name: {db_name}", flush=True)
+    print(f"Registered tables ({len(table_names)}): {table_names}", flush=True)
 
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("DB init: create_all completed successfully")
-    except Exception:
-        logger.exception("DB init: create_all FAILED")
+        print("HARVEX_STARTUP_DB_INIT_SUCCESS", flush=True)
+    except Exception as e:
+        print(f"HARVEX_STARTUP_DB_INIT_FAILED: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
         raise
 
     yield
+
+    print("HARVEX_STARTUP_SHUTDOWN", flush=True)
 
 
 app = FastAPI(
