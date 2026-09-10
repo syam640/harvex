@@ -1,9 +1,18 @@
 import os
 from dotenv import load_dotenv
 
+# Capture env var BEFORE load_dotenv to diagnose Render vs .env behavior
+_db_url_before = os.getenv("DATABASE_URL")
 load_dotenv()
+_db_url_after = os.getenv("DATABASE_URL")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./harvex.db")
+print(f"CONFIG_DB_CHECK: pre_load_dotenv={'SET' if _db_url_before else 'NOT SET'}, post_load_dotenv={'SET' if _db_url_after else 'NOT SET'}", flush=True)
+if _db_url_before:
+    print(f"CONFIG_DB_CHECK: pre value prefix={_db_url_before[:30]}", flush=True)
+if _db_url_after:
+    print(f"CONFIG_DB_CHECK: post value prefix={_db_url_after[:30]}", flush=True)
+
+DATABASE_URL = _db_url_after or "sqlite:///./harvex.db"
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
