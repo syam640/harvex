@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFarm } from '../contexts/FarmContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { weatherAPI } from '../services/api';
@@ -18,7 +18,7 @@ interface ForecastEntry {
 }
 
 export default function Weather() {
-  const { farm } = useFarm();
+  const { farm, farmLoading } = useFarm();
   const { t, language } = useLanguage();
 
   const [loading, setLoading] = useState(true);
@@ -27,9 +27,21 @@ export default function Weather() {
   const [error, setError] = useState('');
   const [weatherStatus, setWeatherStatus] = useState<'current' | 'cached' | 'unavailable'>('unavailable');
 
+  const farmLoaded = useRef(false);
+
   useEffect(() => {
-    loadWeather();
+    if (farmLoaded.current) {
+      loadWeather();
+    }
   }, [farm?.latitude, farm?.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!farmLoading) {
+      farmLoaded.current = true;
+      loadWeather();
+    }
+    return () => { farmLoaded.current = false; };
+  }, [farmLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadWeather = async () => {
     const lat = farm?.latitude;
