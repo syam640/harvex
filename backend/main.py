@@ -1,14 +1,43 @@
 import os
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 from app.api import auth, farms, crop, disease, weather, decision, expenses, harvest, insights, scenarios, assistant
 from app.api import ai, locations, crop_recommendations
 
+import app.models.models  # noqa: F401 — ensure all models are registered with Base.metadata
+
+logger = logging.getLogger("harvex.startup")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    table_names = sorted(Base.metadata.tables.keys())
+    dialect = engine.url.drivername
+    db_host = engine.url.host or "unknown"
+    db_name = engine.url.database or "unknown"
+    logger.info(
+        "DB init: dialect=%s host=%s db=%s registered_tables=%d tables=%s",
+        dialect, db_host, db_name, len(table_names), table_names,
+    )
+
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("DB init: create_all completed successfully")
+    except Exception:
+        logger.exception("DB init: create_all FAILED")
+        raise
+
+    yield
+
+
 app = FastAPI(
     title="Harvex API",
     description="AI-powered Farm Decision Intelligence Platform",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 cors_origins_str = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
@@ -37,13 +66,11 @@ app.include_router(ai.router)
 app.include_router(locations.router)
 app.include_router(crop_recommendations.router)
 
-@app.on_event("startup")
-def startup():
-    Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def root():
     return {"message": "Welcome to Harvex API"}
+
 
 @app.get("/health")
 def health_check():
