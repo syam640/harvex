@@ -101,8 +101,12 @@ def create_harvest(
         market=harvest_data.market
     )
     db.add(harvest)
-    db.commit()
-    db.refresh(harvest)
+    try:
+        db.commit()
+        db.refresh(harvest)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to create harvest record.")
 
     return _build_harvest_response(harvest)
 
@@ -139,8 +143,12 @@ def update_harvest(
     harvest.selling_price = harvest_data.selling_price
     harvest.buyer = harvest_data.buyer
     harvest.market = harvest_data.market
-    db.commit()
-    db.refresh(harvest)
+    try:
+        db.commit()
+        db.refresh(harvest)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to update harvest record.")
 
     return _build_harvest_response(harvest)
 
@@ -161,6 +169,10 @@ def delete_harvest(
         )
 
     db.delete(harvest)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to delete harvest record.")
 
     return {"message": "Harvest record deleted successfully", "deleted_id": harvest_id}

@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -5,6 +6,8 @@ from app.core.auth import get_current_user
 from app.models.models import User, CropCycle, Decision, Expense, Field, Farm, DiseaseScan, WeatherRecord
 from app.schemas.schemas import DecisionRequest, DecisionResponse
 from app.services.decision_engine import analyze_decision
+
+logger = logging.getLogger("harvex.decision")
 
 router = APIRouter(prefix="/api/decision", tags=["decision"])
 
@@ -98,13 +101,17 @@ def analyze_farm_decision(
             detail="Could not gather farm context"
         )
 
-    result = analyze_decision(
-        crop_recommendation=context["crop_recommendation"],
-        disease_result=context["disease_result"],
-        weather=context["weather"],
-        crop_cycle=context["crop_cycle"],
-        expenses=context["expenses"]
-    )
+    try:
+        result = analyze_decision(
+            crop_recommendation=context["crop_recommendation"],
+            disease_result=context["disease_result"],
+            weather=context["weather"],
+            crop_cycle=context["crop_cycle"],
+            expenses=context["expenses"]
+        )
+    except Exception as e:
+        logger.error(f"Decision engine failed: {e}")
+        raise HTTPException(status_code=500, detail="Decision analysis failed.")
 
     decision = Decision(
         crop_cycle_id=request.crop_cycle_id,
@@ -118,7 +125,11 @@ def analyze_farm_decision(
         reasoning_json=result["reasoning"]
     )
     db.add(decision)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to save decision.")
 
     return DecisionResponse(
         recommended_action=result["recommended_action"],

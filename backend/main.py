@@ -18,18 +18,11 @@ logger = logging.getLogger("harvex.startup")
 async def lifespan(app: FastAPI):
     print("HARVEX_STARTUP_DB_INIT_BEGIN", flush=True)
 
-    table_names = sorted(Base.metadata.tables.keys())
-    dialect = engine.url.drivername
-    db_host = engine.url.host or "unknown"
-    db_name = engine.url.database or "unknown"
-
-    print(f"DB dialect: {dialect}", flush=True)
-    print(f"DB host: {db_host}", flush=True)
-    print(f"DB name: {db_name}", flush=True)
-    print(f"Registered tables ({len(table_names)}): {table_names}", flush=True)
-
     try:
         Base.metadata.create_all(bind=engine)
+        dialect = engine.url.drivername
+        table_count = len(Base.metadata.tables)
+        print(f"DB dialect: {dialect}, tables: {table_count}", flush=True)
         print("HARVEX_STARTUP_DB_INIT_SUCCESS", flush=True)
     except Exception as e:
         print(f"HARVEX_STARTUP_DB_INIT_FAILED: {e}", flush=True)

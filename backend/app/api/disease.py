@@ -400,11 +400,15 @@ def _save_disease_scan(
             cycle_id = active_cycle.id
 
     upload_dir = os.path.join(UPLOAD_DIR, str(user_id))
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = f"disease_scan_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
-    filepath = os.path.join(upload_dir, filename)
-    with open(filepath, "wb") as f:
-        f.write(image_bytes)
+    try:
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = f"disease_scan_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
+        filepath = os.path.join(upload_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+    except OSError as e:
+        logger.warning(f"Failed to save disease scan image: {e}")
+        filepath = ""
 
     scan = DiseaseScan(
         crop_cycle_id=cycle_id,
@@ -531,12 +535,16 @@ async def scan_disease(
 
     # Step 6: Persist
     file_ext_final = file_ext or "jpg"
-    scan = _save_disease_scan(
-        current_user.id, cycle_id, image_bytes, file_ext_final,
-        crop_name, disease_data, treatment, db
-    )
-    db.add(scan)
-    db.commit()
+    try:
+        scan = _save_disease_scan(
+            current_user.id, cycle_id, image_bytes, file_ext_final,
+            crop_name, disease_data, treatment, db
+        )
+        db.add(scan)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to persist disease scan: {e}")
 
     # Step 7: Build response
     display_name = disease_data["disease_name"]

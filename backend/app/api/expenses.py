@@ -77,8 +77,12 @@ def create_expense(
         expense_date=expense_data.expense_date
     )
     db.add(expense)
-    db.commit()
-    db.refresh(expense)
+    try:
+        db.commit()
+        db.refresh(expense)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to create expense.")
 
     return ExpenseResponse.model_validate(expense)
 
@@ -113,8 +117,12 @@ def update_expense(
     expense.amount = expense_data.amount
     expense.description = expense_data.description
     expense.expense_date = expense_data.expense_date
-    db.commit()
-    db.refresh(expense)
+    try:
+        db.commit()
+        db.refresh(expense)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to update expense.")
 
     return ExpenseResponse.model_validate(expense)
 
@@ -135,6 +143,10 @@ def delete_expense(
         )
 
     db.delete(expense)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to delete expense.")
 
     return {"message": "Expense deleted successfully", "deleted_id": expense_id}

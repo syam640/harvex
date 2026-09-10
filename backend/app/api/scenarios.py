@@ -204,13 +204,16 @@ def create_scenario(
         simulated_expenses = simulated_expenses + [{"amount": input_changes["pesticide_cost"], "category": "Pesticides"}]
 
     # Run decision engine on SIMULATED context (with crop context!)
-    result = analyze_decision(
-        crop_recommendation=None,
-        disease_result=simulated_disease,
-        weather=simulated_weather,
-        crop_cycle=simulated_crop_cycle,
-        expenses=simulated_expenses
-    )
+    try:
+        result = analyze_decision(
+            crop_recommendation=None,
+            disease_result=simulated_disease,
+            weather=simulated_weather,
+            crop_cycle=simulated_crop_cycle,
+            expenses=simulated_expenses
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Scenario analysis failed.")
 
     scenario = Scenario(
         crop_cycle_id=scenario_data.crop_cycle_id,
@@ -225,7 +228,11 @@ def create_scenario(
         recommendation=result["recommended_action"]
     )
     db.add(scenario)
-    db.commit()
-    db.refresh(scenario)
+    try:
+        db.commit()
+        db.refresh(scenario)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to save scenario.")
 
     return ScenarioResponse.from_scenario(scenario)

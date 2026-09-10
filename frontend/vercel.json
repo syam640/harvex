@@ -2,6 +2,7 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://harvex-eixr.onrender.com/api/:path*" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

@@ -419,7 +419,11 @@ def get_current_weather(
             observed_at=weather_data["observed_at"],
         )
         db.add(record)
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning(f"Failed to cache weather record: {e}")
 
     signals = _compute_agricultural_signals(
         weather_data["temperature"], weather_data["humidity"],
@@ -504,7 +508,11 @@ def get_forecast(
     # Update forecast cache on existing weather record
     if cached:
         cached.forecast_json = forecast_data
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning(f"Failed to update forecast cache: {e}")
 
     return {
         "forecast": forecast_data,
@@ -565,6 +573,10 @@ def set_farm_location(
 
     farm.latitude = lat
     farm.longitude = lon
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update farm location.")
 
     return {"message": "Farm location updated", "farm_id": farm.id, "lat": lat, "lon": lon}

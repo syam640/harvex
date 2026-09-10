@@ -171,7 +171,11 @@ def chat_with_assistant(
         language=request.language,
     )
     db.add(conversation)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Failed to save assistant conversation: {e}")
 
     return AssistantResponse(
         answer=answer,
